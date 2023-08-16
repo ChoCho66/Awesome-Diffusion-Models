@@ -1,7 +1,7 @@
 ---
 bibliography: ../reference.bib
 toc: true
-toc-depth: 3
+toc-depth: 4
 html-math-method: katex
 ---
 
@@ -19,34 +19,39 @@ html-math-method: katex
 
 - However, the DDPM authors decided to keep the variance fixed, and let the neural network only learn (represent) the mean $\mu_{\theta}$ of this conditional probability distribution.
   - This was then later improved in the [Improved Denoising Diffusion Probabilistic Models](https://proceedings.mlr.press/v139/nichol21a/nichol21a.pdf) paper, where a neural network also learns the variance of this backwards process, besides the mean.
+
 ### Defining an objective function (by reparametrizing the mean)
   
 - This means that our neural network becomes a noise predictor, rather than a (direct) mean predictor.
 
-### Position embeddings
+### The neural network
+
+#### Network helpers
+
+#### Position embeddings
   
 - As the parameters of the neural network are shared across time (noise level), the authors employ sinusoidal position embeddings to encode $t,$ inspired by the Transformer [@DBLP:journals/corr/VaswaniSPUJGKP17].
 This makes the neural network "know" at which particular time step (noise level) it is operating, for every image in a batch.
   - 由於神經網絡的參數在不同時間（噪聲水平）上共享，作者受到 Transformer 的啟發，採用正弦位置嵌入來編碼 $t$（Vaswani 等人，2017）。 這使得神經網絡“知道”它在批次中的每個圖像的特定時間步長（噪聲級別）進行操作。
 
-### ResNet block
+#### ResNet block
   
 - Next, we define the core building block of the U-Net model. The DDPM authors employed a Wide ResNet block [@DBLP:journals/corr/ZagoruykoK16], but Phil Wang has replaced the standard convolutional layer by a "weight standardized" version, which works better in combination with group normalization (see @DBLP:journals/corr/abs-1912-11370 for details).
   - 接下來，我們定義 U-Net 模型的核心構建塊。 DDPM 作者採用了 Wide ResNet 塊（Zagoruyko 等人，2016），但 Phil Wang 用“權重標準化”版本取代了標準卷積層，與組歸一化結合使用效果更好（參見（Kolesnikov 等人， 2019）了解詳情）。
 
-### Attention module
+#### Attention module
 
 - Next, we define the attention module, which the DDPM authors added in between the convolutional blocks. Attention is the building block of the famous Transformer architecture [@DBLP:journals/corr/VaswaniSPUJGKP17], which has shown great success in various domains of AI, from NLP and vision to [protein folding](https://www.deepmind.com/blog/alphafold-a-solution-to-a-50-year-old-grand-challenge-in-biology). Phil Wang employs 2 variants of attention: one is regular multi-head self-attention (as used in the Transformer), the other one is a [linear attention variant](https://github.com/lucidrains/linear-attention-transformer) [@DBLP:journals/corr/abs-1812-01243], whose time- and memory requirements scale linear in the sequence length, as opposed to quadratic for regular attention.
   - 接下來，我們定義注意力模塊，DDPM 作者將其添加到卷積塊之間。注意力是著名的 Transformer 架構的構建模塊（Vaswani 等，2017），該架構在人工智能的各個領域（從 NLP、視覺到蛋白質折疊）都取得了巨大成功。 Phil Wang 採用了兩種注意力變體：一種是常規的多頭自註意力（如Transformer 中使用的），另一種是線性注意力變體（Shen 等人，2018），其時間和內存要求呈線性縮放序列長度，而不是常規注意力的二次。
 
 - For an extensive explanation of the attention mechanism, we refer the reader to Jay Allamar's [wonderful blog post](https://jalammar.github.io/illustrated-transformer/).
 
-### Group normalization
+#### Group normalization
 
 - The DDPM authors interleave the convolutional/attention layers of the U-Net with group normalization [@DBLP:journals/corr/abs-1803-08494]. Below, we define a PreNorm class, which will be used to apply groupnorm before the attention layer, as we'll see further. Note that there's been a [debate](https://tnq177.github.io/data/transformers_without_tears.pdf) about whether to apply normalization before or after attention in Transformers.
   - DDPM 作者將 U-Net 的捲積/注意力層與組歸一化交織在一起（Wu et al., 2018）。下面，我們定義一個 PreNorm 類，它將用於在註意層之前應用 groupnorm，我們將進一步看到。請注意，關於 Transformers 中是否在 attention 之前或之後應用歸一化存在爭議。
 
-### Conditional U-Net
+#### Conditional U-Net
 
 - Now that we've defined all building blocks (position embeddings, ResNet blocks, attention and group normalization), it's time to define the entire neural network. Recall that the job of the network $\varepsilon_{\theta}(x_t,t)$ is to take in a batch of noisy images and their respective noise levels, and output the noise added to the input. More formally:
 
@@ -84,7 +89,7 @@ This makes the neural network "know" at which particular time step (noise level)
 
 ### Sampling (inference)
 
-### Follow-up reads
+## Follow-up reads
 
 Note that the DDPM paper showed that diffusion models are a promising direction for (un)conditional image generation. This has since then (immensely) been improved, most notably for text-conditional image generation. Below, we list some important (but far from exhaustive) follow-up works:
 

@@ -81,21 +81,26 @@ div.csl-indent {
    
   <ul>
   <li><a href="#the-annotated-diffusion-model" id="toc-the-annotated-diffusion-model" class="nav-link active" data-scroll-target="#the-annotated-diffusion-model">The Annotated Diffusion Model</a>
-  <ul class="collapse">
+  <ul>
   <li><a href="#what-is-a-diffusion-model" id="toc-what-is-a-diffusion-model" class="nav-link" data-scroll-target="#what-is-a-diffusion-model">What is a diffusion model?</a></li>
   <li><a href="#in-more-mathematical-form" id="toc-in-more-mathematical-form" class="nav-link" data-scroll-target="#in-more-mathematical-form">In more mathematical form</a></li>
+  <li><a href="#defining-an-objective-function-by-reparametrizing-the-mean" id="toc-defining-an-objective-function-by-reparametrizing-the-mean" class="nav-link" data-scroll-target="#defining-an-objective-function-by-reparametrizing-the-mean">Defining an objective function (by reparametrizing the mean)</a></li>
+  <li><a href="#the-neural-network" id="toc-the-neural-network" class="nav-link" data-scroll-target="#the-neural-network">The neural network</a>
+  <ul class="collapse">
+  <li><a href="#network-helpers" id="toc-network-helpers" class="nav-link" data-scroll-target="#network-helpers">Network helpers</a></li>
   <li><a href="#position-embeddings" id="toc-position-embeddings" class="nav-link" data-scroll-target="#position-embeddings">Position embeddings</a></li>
   <li><a href="#resnet-block" id="toc-resnet-block" class="nav-link" data-scroll-target="#resnet-block">ResNet block</a></li>
   <li><a href="#attention-module" id="toc-attention-module" class="nav-link" data-scroll-target="#attention-module">Attention module</a></li>
   <li><a href="#group-normalization" id="toc-group-normalization" class="nav-link" data-scroll-target="#group-normalization">Group normalization</a></li>
   <li><a href="#conditional-u-net" id="toc-conditional-u-net" class="nav-link" data-scroll-target="#conditional-u-net">Conditional U-Net</a></li>
+  </ul></li>
   <li><a href="#defining-the-forward-diffusion-process" id="toc-defining-the-forward-diffusion-process" class="nav-link" data-scroll-target="#defining-the-forward-diffusion-process">Defining the forward diffusion process</a></li>
   <li><a href="#define-a-pytorch-dataset-dataloader" id="toc-define-a-pytorch-dataset-dataloader" class="nav-link" data-scroll-target="#define-a-pytorch-dataset-dataloader">Define a PyTorch Dataset + DataLoader</a></li>
   <li><a href="#sampling" id="toc-sampling" class="nav-link" data-scroll-target="#sampling">Sampling</a></li>
   <li><a href="#train-the-model" id="toc-train-the-model" class="nav-link" data-scroll-target="#train-the-model">Train the model</a></li>
   <li><a href="#sampling-inference" id="toc-sampling-inference" class="nav-link" data-scroll-target="#sampling-inference">Sampling (inference)</a></li>
-  <li><a href="#follow-up-reads" id="toc-follow-up-reads" class="nav-link" data-scroll-target="#follow-up-reads">Follow-up reads</a></li>
   </ul></li>
+  <li><a href="#follow-up-reads" id="toc-follow-up-reads" class="nav-link" data-scroll-target="#follow-up-reads">Follow-up reads</a></li>
   <li><a href="#reference" id="toc-reference" class="nav-link" data-scroll-target="#reference">Reference</a></li>
   </ul>
 </nav>
@@ -125,13 +130,23 @@ div.csl-indent {
 <ul>
 <li>However, the DDPM authors decided to keep the variance fixed, and let the neural network only learn (represent) the mean <span class="math inline">\mu_{\theta}</span> of this conditional probability distribution.
 <ul>
-<li>This was then later improved in the <a href="https://proceedings.mlr.press/v139/nichol21a/nichol21a.pdf">Improved Denoising Diffusion Probabilistic Models</a> paper, where a neural network also learns the variance of this backwards process, besides the mean. ### Defining an objective function (by reparametrizing the mean)</li>
+<li>This was then later improved in the <a href="https://proceedings.mlr.press/v139/nichol21a/nichol21a.pdf">Improved Denoising Diffusion Probabilistic Models</a> paper, where a neural network also learns the variance of this backwards process, besides the mean.</li>
 </ul></li>
+</ul>
+</section>
+<section id="defining-an-objective-function-by-reparametrizing-the-mean" class="level3">
+<h3 class="anchored" data-anchor-id="defining-an-objective-function-by-reparametrizing-the-mean">Defining an objective function (by reparametrizing the mean)</h3>
+<ul>
 <li>This means that our neural network becomes a noise predictor, rather than a (direct) mean predictor.</li>
 </ul>
 </section>
-<section id="position-embeddings" class="level3">
-<h3 class="anchored" data-anchor-id="position-embeddings">Position embeddings</h3>
+<section id="the-neural-network" class="level3">
+<h3 class="anchored" data-anchor-id="the-neural-network">The neural network</h3>
+<section id="network-helpers" class="level4">
+<h4 class="anchored" data-anchor-id="network-helpers">Network helpers</h4>
+</section>
+<section id="position-embeddings" class="level4">
+<h4 class="anchored" data-anchor-id="position-embeddings">Position embeddings</h4>
 <ul>
 <li>As the parameters of the neural network are shared across time (noise level), the authors employ sinusoidal position embeddings to encode <span class="math inline">t,</span> inspired by the Transformer <span class="citation" data-cites="DBLP:journals/corr/VaswaniSPUJGKP17">(<a href="#ref-DBLP:journals/corr/VaswaniSPUJGKP17" role="doc-biblioref">Vaswani et al. 2017</a>)</span>. This makes the neural network “know” at which particular time step (noise level) it is operating, for every image in a batch.
 <ul>
@@ -139,8 +154,8 @@ div.csl-indent {
 </ul></li>
 </ul>
 </section>
-<section id="resnet-block" class="level3">
-<h3 class="anchored" data-anchor-id="resnet-block">ResNet block</h3>
+<section id="resnet-block" class="level4">
+<h4 class="anchored" data-anchor-id="resnet-block">ResNet block</h4>
 <ul>
 <li>Next, we define the core building block of the U-Net model. The DDPM authors employed a Wide ResNet block <span class="citation" data-cites="DBLP:journals/corr/ZagoruykoK16">(<a href="#ref-DBLP:journals/corr/ZagoruykoK16" role="doc-biblioref">Zagoruyko and Komodakis 2016</a>)</span>, but Phil Wang has replaced the standard convolutional layer by a “weight standardized” version, which works better in combination with group normalization (see <span class="citation" data-cites="DBLP:journals/corr/abs-1912-11370">Kolesnikov et al. (<a href="#ref-DBLP:journals/corr/abs-1912-11370" role="doc-biblioref">2019</a>)</span> for details).
 <ul>
@@ -148,8 +163,8 @@ div.csl-indent {
 </ul></li>
 </ul>
 </section>
-<section id="attention-module" class="level3">
-<h3 class="anchored" data-anchor-id="attention-module">Attention module</h3>
+<section id="attention-module" class="level4">
+<h4 class="anchored" data-anchor-id="attention-module">Attention module</h4>
 <ul>
 <li>Next, we define the attention module, which the DDPM authors added in between the convolutional blocks. Attention is the building block of the famous Transformer architecture <span class="citation" data-cites="DBLP:journals/corr/VaswaniSPUJGKP17">(<a href="#ref-DBLP:journals/corr/VaswaniSPUJGKP17" role="doc-biblioref">Vaswani et al. 2017</a>)</span>, which has shown great success in various domains of AI, from NLP and vision to <a href="https://www.deepmind.com/blog/alphafold-a-solution-to-a-50-year-old-grand-challenge-in-biology">protein folding</a>. Phil Wang employs 2 variants of attention: one is regular multi-head self-attention (as used in the Transformer), the other one is a <a href="https://github.com/lucidrains/linear-attention-transformer">linear attention variant</a> <span class="citation" data-cites="DBLP:journals/corr/abs-1812-01243">(<a href="#ref-DBLP:journals/corr/abs-1812-01243" role="doc-biblioref">Shen et al. 2018</a>)</span>, whose time- and memory requirements scale linear in the sequence length, as opposed to quadratic for regular attention.
 <ul>
@@ -158,8 +173,8 @@ div.csl-indent {
 <li>For an extensive explanation of the attention mechanism, we refer the reader to Jay Allamar’s <a href="https://jalammar.github.io/illustrated-transformer/">wonderful blog post</a>.</li>
 </ul>
 </section>
-<section id="group-normalization" class="level3">
-<h3 class="anchored" data-anchor-id="group-normalization">Group normalization</h3>
+<section id="group-normalization" class="level4">
+<h4 class="anchored" data-anchor-id="group-normalization">Group normalization</h4>
 <ul>
 <li>The DDPM authors interleave the convolutional/attention layers of the U-Net with group normalization <span class="citation" data-cites="DBLP:journals/corr/abs-1803-08494">(<a href="#ref-DBLP:journals/corr/abs-1803-08494" role="doc-biblioref">Wu and He 2018</a>)</span>. Below, we define a PreNorm class, which will be used to apply groupnorm before the attention layer, as we’ll see further. Note that there’s been a <a href="https://tnq177.github.io/data/transformers_without_tears.pdf">debate</a> about whether to apply normalization before or after attention in Transformers.
 <ul>
@@ -167,8 +182,8 @@ div.csl-indent {
 </ul></li>
 </ul>
 </section>
-<section id="conditional-u-net" class="level3">
-<h3 class="anchored" data-anchor-id="conditional-u-net">Conditional U-Net</h3>
+<section id="conditional-u-net" class="level4">
+<h4 class="anchored" data-anchor-id="conditional-u-net">Conditional U-Net</h4>
 <ul>
 <li><p>Now that we’ve defined all building blocks (position embeddings, ResNet blocks, attention and group normalization), it’s time to define the entire neural network. Recall that the job of the network <span class="math inline">\varepsilon_{\theta}(x_t,t)</span> is to take in a batch of noisy images and their respective noise levels, and output the noise added to the input. More formally:</p>
 <blockquote class="blockquote">
@@ -197,6 +212,7 @@ div.csl-indent {
 <li><p><a href="http://karpathy.github.io/2019/04/25/recipe/">A Recipe for Training Neural Networks</a></p></li>
 </ul>
 </section>
+</section>
 <section id="defining-the-forward-diffusion-process" class="level3">
 <h3 class="anchored" data-anchor-id="defining-the-forward-diffusion-process">Defining the forward diffusion process</h3>
 <ul>
@@ -215,8 +231,9 @@ div.csl-indent {
 <section id="sampling-inference" class="level3">
 <h3 class="anchored" data-anchor-id="sampling-inference">Sampling (inference)</h3>
 </section>
-<section id="follow-up-reads" class="level3">
-<h3 class="anchored" data-anchor-id="follow-up-reads">Follow-up reads</h3>
+</section>
+<section id="follow-up-reads" class="level2">
+<h2 class="anchored" data-anchor-id="follow-up-reads">Follow-up reads</h2>
 <p>Note that the DDPM paper showed that diffusion models are a promising direction for (un)conditional image generation. This has since then (immensely) been improved, most notably for text-conditional image generation. Below, we list some important (but far from exhaustive) follow-up works:</p>
 <ul>
 <li>Improved Denoising Diffusion Probabilistic Models (Nichol et al., 2021): finds that learning the variance of the conditional distribution (besides the mean) helps in improving performance</li>
@@ -244,7 +261,6 @@ div.csl-indent {
 <p>請注意，此列表僅包含截至撰寫本文時（即 2022 年 6 月 7 日）的重要作品。</p>
 目前看來，擴散模型的主要（也許是唯一）缺點是它們需要多次前向傳遞才能生成圖像（GAN 等生成模型並非如此）。然而，正在進行的研究可以通過短短 10 個降噪步驟實現高保真生成。
 </details>
-</section>
 </section>
 <section id="reference" class="level2 unnumbered">
 
