@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.4.251">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>the-annotated-diffusion-model</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
+
+
+<script src="The-Annotated-Diffusion-Model_files/libs/clipboard/clipboard.min.js"></script>
+<script src="The-Annotated-Diffusion-Model_files/libs/quarto-html/quarto.js"></script>
+<script src="The-Annotated-Diffusion-Model_files/libs/quarto-html/popper.min.js"></script>
+<script src="The-Annotated-Diffusion-Model_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="The-Annotated-Diffusion-Model_files/libs/quarto-html/anchor.min.js"></script>
+<link href="The-Annotated-Diffusion-Model_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="The-Annotated-Diffusion-Model_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="The-Annotated-Diffusion-Model_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="The-Annotated-Diffusion-Model_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="The-Annotated-Diffusion-Model_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+
+  <script>window.backupDefine = window.define; window.define = undefined;</script><script src="https://cdn.jsdelivr.net/npm/katex@0.15.1/dist/katex.min.js"></script>
+  <script>document.addEventListener("DOMContentLoaded", function () {
+ var mathElements = document.getElementsByClassName("math");
+ var macros = [];
+ for (var i = 0; i < mathElements.length; i++) {
+  var texText = mathElements[i].firstChild;
+  if (mathElements[i].tagName == "SPAN") {
+   katex.render(texText.data, mathElements[i], {
+    displayMode: mathElements[i].classList.contains('display'),
+    throwOnError: false,
+    macros: macros,
+    fleqn: false
+   });
+}}});
+  </script>
+  <script>window.define = window.backupDefine; window.backupDefine = undefined;</script><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.15.1/dist/katex.min.css">
+
+</head>
+
+<body>
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+<div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+  <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#the-annotated-diffusion-model" id="toc-the-annotated-diffusion-model" class="nav-link active" data-scroll-target="#the-annotated-diffusion-model">The Annotated Diffusion Model</a>
+  <ul class="collapse">
+  <li><a href="#what-is-a-diffusion-model" id="toc-what-is-a-diffusion-model" class="nav-link" data-scroll-target="#what-is-a-diffusion-model">What is a diffusion model?</a></li>
+  <li><a href="#in-more-mathematical-form" id="toc-in-more-mathematical-form" class="nav-link" data-scroll-target="#in-more-mathematical-form">In more mathematical form</a></li>
+  <li><a href="#position-embeddings" id="toc-position-embeddings" class="nav-link" data-scroll-target="#position-embeddings">Position embeddings</a></li>
+  <li><a href="#resnet-block" id="toc-resnet-block" class="nav-link" data-scroll-target="#resnet-block">ResNet block</a></li>
+  <li><a href="#attention-module" id="toc-attention-module" class="nav-link" data-scroll-target="#attention-module">Attention module</a></li>
+  <li><a href="#group-normalization" id="toc-group-normalization" class="nav-link" data-scroll-target="#group-normalization">Group normalization</a></li>
+  <li><a href="#conditional-u-net" id="toc-conditional-u-net" class="nav-link" data-scroll-target="#conditional-u-net">Conditional U-Net</a></li>
+  <li><a href="#defining-the-forward-diffusion-process" id="toc-defining-the-forward-diffusion-process" class="nav-link" data-scroll-target="#defining-the-forward-diffusion-process">Defining the forward diffusion process</a></li>
+  <li><a href="#define-a-pytorch-dataset-dataloader" id="toc-define-a-pytorch-dataset-dataloader" class="nav-link" data-scroll-target="#define-a-pytorch-dataset-dataloader">Define a PyTorch Dataset + DataLoader</a></li>
+  <li><a href="#sampling" id="toc-sampling" class="nav-link" data-scroll-target="#sampling">Sampling</a></li>
+  <li><a href="#train-the-model" id="toc-train-the-model" class="nav-link" data-scroll-target="#train-the-model">Train the model</a></li>
+  <li><a href="#sampling-inference" id="toc-sampling-inference" class="nav-link" data-scroll-target="#sampling-inference">Sampling (inference)</a></li>
+  <li><a href="#follow-up-reads" id="toc-follow-up-reads" class="nav-link" data-scroll-target="#follow-up-reads">Follow-up reads</a></li>
+  </ul></li>
+  <li><a href="#reference" id="toc-reference" class="nav-link" data-scroll-target="#reference">Reference</a></li>
+  </ul>
+</nav>
+</div>
+<main class="content" id="quarto-document-content">
+
+
+
+<section id="the-annotated-diffusion-model" class="level2">
+<h2 class="anchored" data-anchor-id="the-annotated-diffusion-model"><a href="https://huggingface.co/blog/annotated-diffusion">The Annotated Diffusion Model</a></h2>
+<section id="what-is-a-diffusion-model" class="level3">
+<h3 class="anchored" data-anchor-id="what-is-a-diffusion-model">What is a diffusion model?</h3>
+<ul>
+<li>A (denoising) diffusion model isn’t that complex if you compare it to other generative models such as
+<ul>
+<li>Normalizing Flows,</li>
+<li>GANs or</li>
+<li>VAEs.
+<ul>
+<li><a href="https://arxiv.org/pdf/1312.6114.pdf">Auto-Encoding Variational Bayes</a></li>
+</ul></li>
+</ul></li>
+</ul>
+</section>
+<section id="in-more-mathematical-form" class="level3">
+<h3 class="anchored" data-anchor-id="in-more-mathematical-form">In more mathematical form</h3>
+<ul>
+<li>However, the DDPM authors decided to keep the variance fixed, and let the neural network only learn (represent) the mean <span class="math inline">\mu_{\theta}</span> of this conditional probability distribution.
+<ul>
+<li>This was then later improved in the <a href="https://proceedings.mlr.press/v139/nichol21a/nichol21a.pdf">Improved Denoising Diffusion Probabilistic Models</a> paper, where a neural network also learns the variance of this backwards process, besides the mean. ### Defining an objective function (by reparametrizing the mean)</li>
+</ul></li>
+<li>This means that our neural network becomes a noise predictor, rather than a (direct) mean predictor.</li>
+</ul>
+</section>
+<section id="position-embeddings" class="level3">
+<h3 class="anchored" data-anchor-id="position-embeddings">Position embeddings</h3>
+<ul>
+<li>As the parameters of the neural network are shared across time (noise level), the authors employ sinusoidal position embeddings to encode <span class="math inline">t,</span> inspired by the Transformer <span class="citation" data-cites="DBLP:journals/corr/VaswaniSPUJGKP17">(<a href="#ref-DBLP:journals/corr/VaswaniSPUJGKP17" role="doc-biblioref">Vaswani et al. 2017</a>)</span>. This makes the neural network “know” at which particular time step (noise level) it is operating, for every image in a batch.
+<ul>
+<li>由於神經網絡的參數在不同時間（噪聲水平）上共享，作者受到 Transformer 的啟發，採用正弦位置嵌入來編碼 <span class="math inline">t</span>（Vaswani 等人，2017）。 這使得神經網絡“知道”它在批次中的每個圖像的特定時間步長（噪聲級別）進行操作。</li>
+</ul></li>
+</ul>
+</section>
+<section id="resnet-block" class="level3">
+<h3 class="anchored" data-anchor-id="resnet-block">ResNet block</h3>
+<ul>
+<li>Next, we define the core building block of the U-Net model. The DDPM authors employed a Wide ResNet block <span class="citation" data-cites="DBLP:journals/corr/ZagoruykoK16">(<a href="#ref-DBLP:journals/corr/ZagoruykoK16" role="doc-biblioref">Zagoruyko and Komodakis 2016</a>)</span>, but Phil Wang has replaced the standard convolutional layer by a “weight standardized” version, which works better in combination with group normalization (see <span class="citation" data-cites="DBLP:journals/corr/abs-1912-11370">Kolesnikov et al. (<a href="#ref-DBLP:journals/corr/abs-1912-11370" role="doc-biblioref">2019</a>)</span> for details).
+<ul>
+<li>接下來，我們定義 U-Net 模型的核心構建塊。 DDPM 作者採用了 Wide ResNet 塊（Zagoruyko 等人，2016），但 Phil Wang 用“權重標準化”版本取代了標準卷積層，與組歸一化結合使用效果更好（參見（Kolesnikov 等人， 2019）了解詳情）。</li>
+</ul></li>
+</ul>
+</section>
+<section id="attention-module" class="level3">
+<h3 class="anchored" data-anchor-id="attention-module">Attention module</h3>
+<ul>
+<li>Next, we define the attention module, which the DDPM authors added in between the convolutional blocks. Attention is the building block of the famous Transformer architecture <span class="citation" data-cites="DBLP:journals/corr/VaswaniSPUJGKP17">(<a href="#ref-DBLP:journals/corr/VaswaniSPUJGKP17" role="doc-biblioref">Vaswani et al. 2017</a>)</span>, which has shown great success in various domains of AI, from NLP and vision to <a href="https://www.deepmind.com/blog/alphafold-a-solution-to-a-50-year-old-grand-challenge-in-biology">protein folding</a>. Phil Wang employs 2 variants of attention: one is regular multi-head self-attention (as used in the Transformer), the other one is a <a href="https://github.com/lucidrains/linear-attention-transformer">linear attention variant</a> <span class="citation" data-cites="DBLP:journals/corr/abs-1812-01243">(<a href="#ref-DBLP:journals/corr/abs-1812-01243" role="doc-biblioref">Shen et al. 2018</a>)</span>, whose time- and memory requirements scale linear in the sequence length, as opposed to quadratic for regular attention.
+<ul>
+<li>接下來，我們定義注意力模塊，DDPM 作者將其添加到卷積塊之間。注意力是著名的 Transformer 架構的構建模塊（Vaswani 等，2017），該架構在人工智能的各個領域（從 NLP、視覺到蛋白質折疊）都取得了巨大成功。 Phil Wang 採用了兩種注意力變體：一種是常規的多頭自註意力（如Transformer 中使用的），另一種是線性注意力變體（Shen 等人，2018），其時間和內存要求呈線性縮放序列長度，而不是常規注意力的二次。</li>
+</ul></li>
+<li>For an extensive explanation of the attention mechanism, we refer the reader to Jay Allamar’s <a href="https://jalammar.github.io/illustrated-transformer/">wonderful blog post</a>.</li>
+</ul>
+</section>
+<section id="group-normalization" class="level3">
+<h3 class="anchored" data-anchor-id="group-normalization">Group normalization</h3>
+<ul>
+<li>The DDPM authors interleave the convolutional/attention layers of the U-Net with group normalization <span class="citation" data-cites="DBLP:journals/corr/abs-1803-08494">(<a href="#ref-DBLP:journals/corr/abs-1803-08494" role="doc-biblioref">Wu and He 2018</a>)</span>. Below, we define a PreNorm class, which will be used to apply groupnorm before the attention layer, as we’ll see further. Note that there’s been a <a href="https://tnq177.github.io/data/transformers_without_tears.pdf">debate</a> about whether to apply normalization before or after attention in Transformers.
+<ul>
+<li>DDPM 作者將 U-Net 的捲積/注意力層與組歸一化交織在一起（Wu et al., 2018）。下面，我們定義一個 PreNorm 類，它將用於在註意層之前應用 groupnorm，我們將進一步看到。請注意，關於 Transformers 中是否在 attention 之前或之後應用歸一化存在爭議。</li>
+</ul></li>
+</ul>
+</section>
+<section id="conditional-u-net" class="level3">
+<h3 class="anchored" data-anchor-id="conditional-u-net">Conditional U-Net</h3>
+<ul>
+<li><p>Now that we’ve defined all building blocks (position embeddings, ResNet blocks, attention and group normalization), it’s time to define the entire neural network. Recall that the job of the network <span class="math inline">\varepsilon_{\theta}(x_t,t)</span> is to take in a batch of noisy images and their respective noise levels, and output the noise added to the input. More formally:</p>
+<blockquote class="blockquote">
+<p>the network takes a batch of noisy images of shape (batch_size, num_channels, height, width) and a batch of noise levels of shape (batch_size, 1) as input, and returns a tensor of shape (batch_size, num_channels, height, width)</p>
+</blockquote>
+<ul>
+<li><p>現在我們已經定義了所有構建塊（位置嵌入、ResNet 塊、注意力和組標準化），是時候定義整個神經網絡了。回想一下，網絡 <span class="math inline">\varepsilon_{\theta}(x_t,t)</span> 的工作是接收一批噪聲圖像及其各自的噪聲水平，並輸出添加到輸入的噪聲。更正式地說：</p>
+<blockquote class="blockquote">
+<p>該網絡將一批形狀為(batch_size, num_channels, height, width) 的噪聲圖像和一批形狀為(batch_size, 1) 的噪聲水平作為輸入，並返回形狀為(batch_size, num_channels, height, width) 的張量</p>
+</blockquote></li>
+</ul></li>
+<li><p>The network is built up as follows:</p>
+<ul>
+<li><p>first, a convolutional layer is applied on the batch of noisy images, and position embeddings are computed for the noise levels</p></li>
+<li><p>next, a sequence of downsampling stages are applied. Each downsampling stage consists of</p>
+<blockquote class="blockquote">
+<p>2 ResNet blocks + groupnorm + attention + residual connection + a downsample operation</p>
+</blockquote></li>
+<li><p>at the middle of the network, again ResNet blocks are applied, interleaved with attention</p></li>
+<li><p>next, a sequence of upsampling stages are applied. Each upsampling stage consists of</p>
+<blockquote class="blockquote">
+<p>2 ResNet blocks + groupnorm + attention + residual connection + an upsample operation</p>
+</blockquote></li>
+<li><p>finally, a ResNet block followed by a convolutional layer is applied.</p></li>
+</ul></li>
+<li><p><a href="http://karpathy.github.io/2019/04/25/recipe/">A Recipe for Training Neural Networks</a></p></li>
+</ul>
+</section>
+<section id="defining-the-forward-diffusion-process" class="level3">
+<h3 class="anchored" data-anchor-id="defining-the-forward-diffusion-process">Defining the forward diffusion process</h3>
+<ul>
+<li>However, it was shown in <span class="citation" data-cites="DBLP:journals/corr/abs-2102-09672">Nichol and Dhariwal (<a href="#ref-DBLP:journals/corr/abs-2102-09672" role="doc-biblioref">2021</a>)</span> that better results can be achieved when employing a cosine schedule.</li>
+</ul>
+</section>
+<section id="define-a-pytorch-dataset-dataloader" class="level3">
+<h3 class="anchored" data-anchor-id="define-a-pytorch-dataset-dataloader">Define a PyTorch Dataset + DataLoader</h3>
+</section>
+<section id="sampling" class="level3">
+<h3 class="anchored" data-anchor-id="sampling">Sampling</h3>
+</section>
+<section id="train-the-model" class="level3">
+<h3 class="anchored" data-anchor-id="train-the-model">Train the model</h3>
+</section>
+<section id="sampling-inference" class="level3">
+<h3 class="anchored" data-anchor-id="sampling-inference">Sampling (inference)</h3>
+</section>
+<section id="follow-up-reads" class="level3">
+<h3 class="anchored" data-anchor-id="follow-up-reads">Follow-up reads</h3>
+<p>Note that the DDPM paper showed that diffusion models are a promising direction for (un)conditional image generation. This has since then (immensely) been improved, most notably for text-conditional image generation. Below, we list some important (but far from exhaustive) follow-up works:</p>
+<ul>
+<li>Improved Denoising Diffusion Probabilistic Models (Nichol et al., 2021): finds that learning the variance of the conditional distribution (besides the mean) helps in improving performance</li>
+<li>Cascaded Diffusion Models for High Fidelity Image Generation (Ho et al., 2021): introduces cascaded diffusion, which comprises a pipeline of multiple diffusion models that generate images of increasing resolution for high-fidelity image synthesis</li>
+<li>Diffusion Models Beat GANs on Image Synthesis (Dhariwal et al., 2021): show that diffusion models can achieve image sample quality superior to the current state-of-the-art generative models by improving the U-Net architecture, as well as introducing classifier guidance</li>
+<li>Classifier-Free Diffusion Guidance (Ho et al., 2021): shows that you don’t need a classifier for guiding a diffusion model by jointly training a conditional and an unconditional diffusion model with a single neural network</li>
+<li>Hierarchical Text-Conditional Image Generation with CLIP Latents (DALL-E 2) (Ramesh et al., 2022): uses a prior to turn a text caption into a CLIP image embedding, after which a diffusion model decodes it into an image</li>
+<li>Photorealistic Text-to-Image Diffusion Models with Deep Language Understanding (ImageGen) (Saharia et al., 2022): shows that combining a large pre-trained language model (e.g.&nbsp;T5) with cascaded diffusion works well for text-to-image synthesis</li>
+</ul>
+<p>Note that this list only includes important works until the time of writing, which is June 7th, 2022.</p>
+<p>For now, it seems that the main (perhaps only) disadvantage of diffusion models is that they require multiple forward passes to generate an image (which is not the case for generative models like GANs). However, there’s research going on that enables high-fidelity generation in as few as 10 denoising steps.</p>
+<details>
+<summary>
+翻譯
+</summary>
+<p>請注意，DDPM 論文表明擴散模型是（非）條件圖像生成的一個有前途的方向。從那時起，這已經得到了（巨大的）改進，最顯著的是文本條件圖像生成。下面，我們列出了一些重要的（但遠非詳盡的）後續工作：</p>
+<ul>
+<li>改進的去噪擴散概率模型（Nichol et al., 2021）：發現學習條件分佈的方差（除了平均值）有助於提高性能</li>
+<li>用於高保真圖像生成的級聯擴散模型（Ho et al., 2021）：引入級聯擴散，其中包含多個擴散模型的管道，這些模型可生成分辨率不斷提高的圖像以進行高保真圖像合成</li>
+<li>擴散模型在圖像合成上擊敗 GAN（Dhariwal 等人，2021）：表明擴散模型可以通過改進 U-Net 架構來實現優於當前最先進的生成模型的圖像樣本質量，以及引入分類器指導</li>
+<li>無分類器擴散指導（Ho et al., 2021）：表明您不需要分類器來通過使用單個神經網絡聯合訓練條件和無條件擴散模型來指導擴散模型</li>
+<li>Hierarchical Text-Conditional Image Generation with CLIP Latents (DALL-E 2) (Ramesh et al., 2022)：使用先驗將文本標題轉換為 CLIP 圖像嵌入，之後擴散模型將其解碼為圖像</li>
+<li>具有深度語言理解的真實感文本到圖像擴散模型 (ImageGen)（Saharia 等人，2022）：表明將大型預訓練語言模型（例如 T5）與級聯擴散相結合非常適合文本到圖像合成</li>
+</ul>
+<p>請注意，此列表僅包含截至撰寫本文時（即 2022 年 6 月 7 日）的重要作品。</p>
+目前看來，擴散模型的主要（也許是唯一）缺點是它們需要多次前向傳遞才能生成圖像（GAN 等生成模型並非如此）。然而，正在進行的研究可以通過短短 10 個降噪步驟實現高保真生成。
+</details>
+</section>
+</section>
+<section id="reference" class="level2 unnumbered">
+
+
+</section>
+
+<div id="quarto-appendix" class="default"><section class="quarto-appendix-contents" role="doc-bibliography"><h2 class="anchored quarto-appendix-heading">Reference</h2><div id="refs" class="references csl-bib-body hanging-indent" role="list">
+<div id="ref-DBLP:journals/corr/abs-1912-11370" class="csl-entry" role="listitem">
+Kolesnikov, Alexander, Lucas Beyer, Xiaohua Zhai, Joan Puigcerver, Jessica Yung, Sylvain Gelly, and Neil Houlsby. 2019. <span>“Large Scale Learning of General Visual Representations for Transfer.”</span> <em>CoRR</em> abs/1912.11370. <a href="http://arxiv.org/abs/1912.11370">http://arxiv.org/abs/1912.11370</a>.
+</div>
+<div id="ref-DBLP:journals/corr/abs-2102-09672" class="csl-entry" role="listitem">
+Nichol, Alex, and Prafulla Dhariwal. 2021. <span>“Improved Denoising Diffusion Probabilistic Models.”</span> <em>CoRR</em> abs/2102.09672. <a href="https://arxiv.org/abs/2102.09672">https://arxiv.org/abs/2102.09672</a>.
+</div>
+<div id="ref-DBLP:journals/corr/abs-1812-01243" class="csl-entry" role="listitem">
+Shen, Zhuoran, Mingyuan Zhang, Shuai Yi, Junjie Yan, and Haiyu Zhao. 2018. <span>“Factorized Attention: Self-Attention with Linear Complexities.”</span> <em>CoRR</em> abs/1812.01243. <a href="http://arxiv.org/abs/1812.01243">http://arxiv.org/abs/1812.01243</a>.
+</div>
+<div id="ref-DBLP:journals/corr/VaswaniSPUJGKP17" class="csl-entry" role="listitem">
+Vaswani, Ashish, Noam Shazeer, Niki Parmar, Jakob Uszkoreit, Llion Jones, Aidan N. Gomez, Lukasz Kaiser, and Illia Polosukhin. 2017. <span>“Attention Is All You Need.”</span> <em>CoRR</em> abs/1706.03762. <a href="http://arxiv.org/abs/1706.03762">http://arxiv.org/abs/1706.03762</a>.
+</div>
+<div id="ref-DBLP:journals/corr/abs-1803-08494" class="csl-entry" role="listitem">
+Wu, Yuxin, and Kaiming He. 2018. <span>“Group Normalization.”</span> <em>CoRR</em> abs/1803.08494. <a href="http://arxiv.org/abs/1803.08494">http://arxiv.org/abs/1803.08494</a>.
+</div>
+<div id="ref-DBLP:journals/corr/ZagoruykoK16" class="csl-entry" role="listitem">
+Zagoruyko, Sergey, and Nikos Komodakis. 2016. <span>“Wide Residual Networks.”</span> <em>CoRR</em> abs/1605.07146. <a href="http://arxiv.org/abs/1605.07146">http://arxiv.org/abs/1605.07146</a>.
+</div>
+</div></section></div></main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        for (let i = 0; i < 2; i++) {
+          container.appendChild(note.children[i].cloneNode(true));
+        }
+        return container.innerHTML
+      } else {
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      return note.innerHTML;
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

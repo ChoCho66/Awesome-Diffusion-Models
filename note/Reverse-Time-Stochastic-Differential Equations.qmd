@@ -1,0 +1,78 @@
+---
+bibliography: ../reference.bib
+html-math-method: katex
+---
+
+## [Reverse Time Stochastic Differential Equations](https://ludwigwinkler.github.io/blog/ReverseTimeAnderson/)
+
+- Consider a process $(X_t)_{t\in [0,1]}$ which satisfies the SDE
+  $$
+  \begin{aligned}
+    \mathrm{d}X_t = \mu(X_t,t)\mathrm{d}t + \sigma(X_t,t) \mathrm{d}B_t, \quad t\in [0,1].
+  \end{aligned}
+  $$
+  Let $\overline{X}_{\tau}:=X_{1-\tau},\tau\in [0,1]$
+  be the reverse process of $(X_t)_{t\in [0,1]}.$
+  Then $(\overline{X}_\tau)_{\tau \in [0,1]}$ satisfies the SDE, for $t=1-\tau,$
+  $$
+  \begin{aligned}
+    \mathrm{d}\overline{X}_\tau = \underline{\biggl( -\mu(\overline{X}_\tau) + \frac{1}{p(\overline{X}_\tau,t)} \partial_x \Bigl( \sigma(x,t)^2 p(x,t) \Bigr) \bigg\vert_{x=\overline{X}_\tau} \biggr)} \mathrm{d}\tau + 
+    \underline{\sigma(\overline{X}_\tau,t)} d\overline{B}_\tau,
+  \end{aligned}
+  $$
+  where $p(\cdot,t)$ is the density of $X_t.$
+
+- If we set
+  $$
+  \begin{aligned}
+    \overline{\sigma}(\tau):=\sigma(1-\tau), \quad \overline{p}(\cdot,\tau):= p(\cdot,1-\tau),
+  \end{aligned}
+  $$
+  then the SDE above becomes
+  $$
+  \begin{aligned}
+    \mathrm{d}\overline{X}_\tau = \underline{\biggl( -\mu(\overline{X}_\tau) + \frac{1}{\overline{p}(\overline{X}_\tau,\tau)} \partial_x \Bigl( \overline{\sigma}(x,\tau)^2 \overline{p}(x,\tau) \Bigr) \bigg\vert_{x=\overline{X}_\tau} \biggr)} \mathrm{d}\tau + 
+    \underline{\overline{\sigma}(\overline{X}_\tau,\tau)} d\overline{B}_\tau, \quad \tau\in [0,1].
+  \end{aligned}
+  $$
+  If $\sigma(x,t)$ is independent of $x,$ 
+  i.e. $\sigma(x,t)=\sigma(t),$
+  then
+  $$
+  \begin{aligned}
+    \mathrm{d}\overline{X}_\tau = 
+    \underline{\biggl( -\mu(\overline{X}_\tau) + 
+    \overline{\sigma}(\tau)^2 \partial_x \Bigl(  \log \overline{p}(x,\tau) \Bigr) \bigg\vert_{x=\overline{X}_\tau} \biggr)} \mathrm{d}\tau + 
+    \underline{\overline{\sigma}(\tau)} d\overline{B}_\tau, \quad \tau\in [0,1].
+  \end{aligned}
+  $$
+
+- **Sketch of proof:**
+
+  Let $p(\cdot,t)$ be the density of $X_t.$
+  Since $(X_t)_{t\in [0,1]}$ satisfies the SDE
+  $$
+  \begin{aligned}
+    \mathrm{d}X_t = \mu(X_t,t)\mathrm{d}t + \sigma(X_t,t) \mathrm{d}B_t, \quad t\in [0,1],
+  \end{aligned}
+  $$
+  we have the Kolmogorov forward equation (KFE), also called [Fokker Planck equation](https://en.wikipedia.org/wiki/Fokker–Planck_equation),
+  $$
+  \begin{aligned}
+    \partial_t p(x,t) = -\partial_x \bigl( \mu(x,t) p(x,t) \bigr) + \frac{1}{2} \partial_x^2 \bigl( \sigma(x,t)^2 p(x,t) \bigr).
+  \end{aligned}
+  $$
+  Let $p(\cdot,s\vert x,t), s\geq t,$ be the conditional density of $X_s$ given $X_t=x.$
+  Also, we have the Kolmogorov backward equation (KBF)
+  $$
+  \begin{aligned}
+    -\partial_t p(y,s\vert x,t) = \mu(x,t) \partial_x p(y,s\vert x,t) + \frac{1}{2} \sigma(x,t)^2 \partial_x^2 p(y,s\vert x,t), \quad t\leq s.
+  \end{aligned}
+  $$
+
+  $$
+  \begin{aligned}
+    -\partial_t p(x,t) = \mu(x,t) \partial_x p(x,t) + \frac{1}{2}\sigma(x,t)^2 \partial_x^2 p(x,t), \quad t\leq s.
+  \end{aligned}
+  $$
+

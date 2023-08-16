@@ -1,0 +1,119 @@
+---
+bibliography: ../reference.bib
+toc: true
+toc-depth: 3
+html-math-method: katex
+---
+
+## [The Annotated Diffusion Model](https://huggingface.co/blog/annotated-diffusion)
+  
+### What is a diffusion model?
+
+- A (denoising) diffusion model isn't that complex if you compare it to other generative models such as 
+  - Normalizing Flows,
+  - GANs or 
+  - VAEs.
+    - [Auto-Encoding Variational Bayes](https://arxiv.org/pdf/1312.6114.pdf)
+
+### In more mathematical form
+
+- However, the DDPM authors decided to keep the variance fixed, and let the neural network only learn (represent) the mean $\mu_{\theta}$ of this conditional probability distribution.
+  - This was then later improved in the [Improved Denoising Diffusion Probabilistic Models](https://proceedings.mlr.press/v139/nichol21a/nichol21a.pdf) paper, where a neural network also learns the variance of this backwards process, besides the mean.
+### Defining an objective function (by reparametrizing the mean)
+  
+- This means that our neural network becomes a noise predictor, rather than a (direct) mean predictor.
+
+### Position embeddings
+  
+- As the parameters of the neural network are shared across time (noise level), the authors employ sinusoidal position embeddings to encode $t,$ inspired by the Transformer [@DBLP:journals/corr/VaswaniSPUJGKP17].
+This makes the neural network "know" at which particular time step (noise level) it is operating, for every image in a batch.
+  - 由於神經網絡的參數在不同時間（噪聲水平）上共享，作者受到 Transformer 的啟發，採用正弦位置嵌入來編碼 $t$（Vaswani 等人，2017）。 這使得神經網絡“知道”它在批次中的每個圖像的特定時間步長（噪聲級別）進行操作。
+
+### ResNet block
+  
+- Next, we define the core building block of the U-Net model. The DDPM authors employed a Wide ResNet block [@DBLP:journals/corr/ZagoruykoK16], but Phil Wang has replaced the standard convolutional layer by a "weight standardized" version, which works better in combination with group normalization (see @DBLP:journals/corr/abs-1912-11370 for details).
+  - 接下來，我們定義 U-Net 模型的核心構建塊。 DDPM 作者採用了 Wide ResNet 塊（Zagoruyko 等人，2016），但 Phil Wang 用“權重標準化”版本取代了標準卷積層，與組歸一化結合使用效果更好（參見（Kolesnikov 等人， 2019）了解詳情）。
+
+### Attention module
+
+- Next, we define the attention module, which the DDPM authors added in between the convolutional blocks. Attention is the building block of the famous Transformer architecture [@DBLP:journals/corr/VaswaniSPUJGKP17], which has shown great success in various domains of AI, from NLP and vision to [protein folding](https://www.deepmind.com/blog/alphafold-a-solution-to-a-50-year-old-grand-challenge-in-biology). Phil Wang employs 2 variants of attention: one is regular multi-head self-attention (as used in the Transformer), the other one is a [linear attention variant](https://github.com/lucidrains/linear-attention-transformer) [@DBLP:journals/corr/abs-1812-01243], whose time- and memory requirements scale linear in the sequence length, as opposed to quadratic for regular attention.
+  - 接下來，我們定義注意力模塊，DDPM 作者將其添加到卷積塊之間。注意力是著名的 Transformer 架構的構建模塊（Vaswani 等，2017），該架構在人工智能的各個領域（從 NLP、視覺到蛋白質折疊）都取得了巨大成功。 Phil Wang 採用了兩種注意力變體：一種是常規的多頭自註意力（如Transformer 中使用的），另一種是線性注意力變體（Shen 等人，2018），其時間和內存要求呈線性縮放序列長度，而不是常規注意力的二次。
+
+- For an extensive explanation of the attention mechanism, we refer the reader to Jay Allamar's [wonderful blog post](https://jalammar.github.io/illustrated-transformer/).
+
+### Group normalization
+
+- The DDPM authors interleave the convolutional/attention layers of the U-Net with group normalization [@DBLP:journals/corr/abs-1803-08494]. Below, we define a PreNorm class, which will be used to apply groupnorm before the attention layer, as we'll see further. Note that there's been a [debate](https://tnq177.github.io/data/transformers_without_tears.pdf) about whether to apply normalization before or after attention in Transformers.
+  - DDPM 作者將 U-Net 的捲積/注意力層與組歸一化交織在一起（Wu et al., 2018）。下面，我們定義一個 PreNorm 類，它將用於在註意層之前應用 groupnorm，我們將進一步看到。請注意，關於 Transformers 中是否在 attention 之前或之後應用歸一化存在爭議。
+
+### Conditional U-Net
+
+- Now that we've defined all building blocks (position embeddings, ResNet blocks, attention and group normalization), it's time to define the entire neural network. Recall that the job of the network $\varepsilon_{\theta}(x_t,t)$ is to take in a batch of noisy images and their respective noise levels, and output the noise added to the input. More formally:
+
+  > the network takes a batch of noisy images of shape (batch_size, num_channels, height, width) and a batch of noise levels of shape (batch_size, 1) as input, and returns a tensor of shape (batch_size, num_channels, height, width)
+
+  - 現在我們已經定義了所有構建塊（位置嵌入、ResNet 塊、注意力和組標準化），是時候定義整個神經網絡了。回想一下，網絡 $\varepsilon_{\theta}(x_t,t)$ 的工作是接收一批噪聲圖像及其各自的噪聲水平，並輸出添加到輸入的噪聲。更正式地說：
+    
+    > 該網絡將一批形狀為(batch_size, num_channels, height, width) 的噪聲圖像和一批形狀為(batch_size, 1) 的噪聲水平作為輸入，並返回形狀為(batch_size, num_channels, height, width) 的張量
+
+- The network is built up as follows:
+  - first, a convolutional layer is applied on the batch of noisy images, and position embeddings are computed for the noise levels
+  - next, a sequence of downsampling stages are applied. Each downsampling stage consists of 
+    
+    > 2 ResNet blocks + groupnorm + attention + residual connection + a downsample operation
+
+  - at the middle of the network, again ResNet blocks are applied, interleaved with attention
+  
+  - next, a sequence of upsampling stages are applied. Each upsampling stage consists of 
+    
+    > 2 ResNet blocks + groupnorm + attention + residual connection + an upsample operation
+  
+  - finally, a ResNet block followed by a convolutional layer is applied.
+
+- [A Recipe for Training Neural Networks](http://karpathy.github.io/2019/04/25/recipe/)
+
+### Defining the forward diffusion process
+
+- However, it was shown in @DBLP:journals/corr/abs-2102-09672 that better results can be achieved when employing a cosine schedule.
+
+### Define a PyTorch Dataset + DataLoader
+
+### Sampling
+
+### Train the model
+
+### Sampling (inference)
+
+### Follow-up reads
+
+Note that the DDPM paper showed that diffusion models are a promising direction for (un)conditional image generation. This has since then (immensely) been improved, most notably for text-conditional image generation. Below, we list some important (but far from exhaustive) follow-up works:
+
+- Improved Denoising Diffusion Probabilistic Models (Nichol et al., 2021): finds that learning the variance of the conditional distribution (besides the mean) helps in improving performance
+- Cascaded Diffusion Models for High Fidelity Image Generation (Ho et al., 2021): introduces cascaded diffusion, which comprises a pipeline of multiple diffusion models that generate images of increasing resolution for high-fidelity image synthesis
+- Diffusion Models Beat GANs on Image Synthesis (Dhariwal et al., 2021): show that diffusion models can achieve image sample quality superior to the current state-of-the-art generative models by improving the U-Net architecture, as well as introducing classifier guidance
+- Classifier-Free Diffusion Guidance (Ho et al., 2021): shows that you don't need a classifier for guiding a diffusion model by jointly training a conditional and an unconditional diffusion model with a single neural network
+- Hierarchical Text-Conditional Image Generation with CLIP Latents (DALL-E 2) (Ramesh et al., 2022): uses a prior to turn a text caption into a CLIP image embedding, after which a diffusion model decodes it into an image
+- Photorealistic Text-to-Image Diffusion Models with Deep Language Understanding (ImageGen) (Saharia et al., 2022): shows that combining a large pre-trained language model (e.g. T5) with cascaded diffusion works well for text-to-image synthesis
+
+Note that this list only includes important works until the time of writing, which is June 7th, 2022.
+
+For now, it seems that the main (perhaps only) disadvantage of diffusion models is that they require multiple forward passes to generate an image (which is not the case for generative models like GANs). However, there's research going on that enables high-fidelity generation in as few as 10 denoising steps.
+
+<details>
+<summary>翻譯</summary>
+請注意，DDPM 論文表明擴散模型是（非）條件圖像生成的一個有前途的方向。從那時起，這已經得到了（巨大的）改進，最顯著的是文本條件圖像生成。下面，我們列出了一些重要的（但遠非詳盡的）後續工作：
+
+- 改進的去噪擴散概率模型（Nichol et al., 2021）：發現學習條件分佈的方差（除了平均值）有助於提高性能
+- 用於高保真圖像生成的級聯擴散模型（Ho et al., 2021）：引入級聯擴散，其中包含多個擴散模型的管道，這些模型可生成分辨率不斷提高的圖像以進行高保真圖像合成
+- 擴散模型在圖像合成上擊敗 GAN（Dhariwal 等人，2021）：表明擴散模型可以通過改進 U-Net 架構來實現優於當前最先進的生成模型的圖像樣本質量，以及引入分類器指導
+- 無分類器擴散指導（Ho et al., 2021）：表明您不需要分類器來通過使用單個神經網絡聯合訓練條件和無條件擴散模型來指導擴散模型
+- Hierarchical Text-Conditional Image Generation with CLIP Latents (DALL-E 2) (Ramesh et al., 2022)：使用先驗將文本標題轉換為 CLIP 圖像嵌入，之後擴散模型將其解碼為圖像
+- 具有深度語言理解的真實感文本到圖像擴散模型 (ImageGen)（Saharia 等人，2022）：表明將大型預訓練語言模型（例如 T5）與級聯擴散相結合非常適合文本到圖像合成
+
+請注意，此列表僅包含截至撰寫本文時（即 2022 年 6 月 7 日）的重要作品。
+
+目前看來，擴散模型的主要（也許是唯一）缺點是它們需要多次前向傳遞才能生成圖像（GAN 等生成模型並非如此）。然而，正在進行的研究可以通過短短 10 個降噪步驟實現高保真生成。
+</details>
+
+
+## Reference

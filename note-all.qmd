@@ -1,0 +1,71 @@
+---
+bibliography: reference.bib
+toc: true
+toc-expand: true
+html-math-method: katex
+title: Note-all
+---
+
+# TO DO
+
+## [A Recipe for Training Neural Networks](http://karpathy.github.io/2019/04/25/recipe/)
+
+## [Auto-Encoding Variational Bayes](https://arxiv.org/pdf/1312.6114.pdf)
+
+## [Transformer](http://arxiv.org/abs/1706.03762)
+
+# Reading
+
+## [Understanding the backward pass through Batch Normalization Layer](https://kratzert.github.io/2016/02/12/understanding-the-gradient-flow-through-the-batch-normalization-layer.html)
+
+## [Understanding Diffusion Models: A Unified Perspective](https://arxiv.org/abs/2208.11970)
+
+- @luo2022understanding
+  
+- Introduction: Generative Models
+  - Generative Adversarial Networks (GANs) model the sampling procedure of a complex distribution, which is learned in an adversarial manner. 
+  - Another class of generative models, termed "likelihood-based", seeks to learn a model that assigns a high likelihood to the observed data samples. 
+    - This includes autoregressive models, normalizing flows, and Variational Autoencoders (VAEs). 
+  - Another similar approach is energy-based modeling, in which a distribution is learned as an arbitrarily flexible energy function that is then normalized.
+  
+  - Score-based generative models are highly related; instead of learning to model the energy function itself, they learn the **score** of the energy-based model as a neural network. 
+
+- Tweedie’s Formula:
+  
+  - Let $\mu,z$ be two r.v.s with joint density $f(\mu,z).$
+  - Let $f(\mu),f(z)$ are marginal density of $\mu,z$ respectively. 
+  - Suppose $f(z\vert \mu) = \mathcal{N}(\mu,\Sigma)$ for some $\Sigma$ constant matrix.
+  
+  Then
+  $$
+  \begin{aligned}
+    \mathbf{E}\bigl[ \mu \vert z \bigr] = \underbrace{z}_{\text{MLE}} + \Sigma \cdot \underbrace{\nabla_z \log f(z)}_{\text{Bayes correction}}.
+  \end{aligned}
+  $$
+  
+  - See page 4 in <https://efron.ckirby.su.domains/talks/2010TweediesFormula.pdf>.
+
+
+## [The Annotated Diffusion Model](note/The-Annotated-Diffusion-Model.html)
+
+
+## [How diffusion models work: the math from scratch](https://theaisummer.com/diffusion-models/)
+
+- @karagiannakos2022diffusionmodels
+
+- Training a diffusion mode
+  - @ho2020denoising decide to keep the variance fixed and have the network learn only the mean.
+
+  - This was later improved by @DBLP:journals/corr/abs-2102-09672, who decide to let the network learn the covariance matrix $\Sigma$ as well (by modifying $L_t^{\text{simple}}$), achieving better results.
+
+
+## [Reverse Time Stochastic Differential Equations](note/Reverse-Time-Stochastic-Differential Equations.html)
+
+--- 
+
+## Transformer and Attention
+
+
+---
+
+# Reference
